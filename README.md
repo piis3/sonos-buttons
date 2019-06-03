@@ -1,6 +1,5 @@
 # Sonos control pad with ESP32 Thing board
 
-## 1. Intro
 This project is a hobby project for controlling a sonos player using an ESP32 board and a button pad. I got the idea for the 
 project while working in my garage and having gloves on or dirty hands and not wanting to mess with my phone to control the 
 sonos player in there. Obviously the lazy thing would have been to get a voice assistant in there, but what fun is that?
@@ -19,7 +18,7 @@ So I wound up going with a handful of stuff from Sparkfun:
 The ESP32 fit the bill for the project since it has a ridiculously low power draw when it's in sleep, has WiFi 
 built in and the sparkfun board comes with a LIPO battery charger on it.
 
-## 2. Software
+## Software
 I had initially used the Sonos public control API, which goes through Sonos' servers to control your local sonos
 player. After getting this all working I found the latency period to be less than ideal. Sonos also
 had a multi day service outage while I was wrapping up work on that version. I settled on using the local network UPnP based 
@@ -54,33 +53,33 @@ state that draws *micro*amps of current while still being able to respond to ext
 After waking up from a deep sleep the ESP32 has to rejoin wifi, which usually takes a couple of seconds, so one of the hardest things
 was to get it to remember what button was pressed to wake it up from deep sleep. I didn't have a lot of luck with the built-in 
 touchpad, or GPIO (ext1) based wakeup solutions. The ext1 stuff kept going into sleep/wake loops, and the touchpad wakeups 
-wouldn't report the correct GPIO input for the wakeup source. The ESP32 supports wakeup events from a Ultra Low Power (ULP) 
-processor, which is a minimal, slow extra processor that can run some limited code, and can wakeup the main processor while
-sharing memory with it. Even when this ULP processor is running, the board supposedly still draws current in the 100 microamp
+wouldn't report the correct GPIO input for the wakeup source. 
+
+The ESP32 supports wakeup events from a Ultra Low Power (ULP) processor, which is a minimal extra processor that can run some limited code and can wakeup the main processor while
+sharing memory with it. When this ULP processor is running and the main processor is in deep sleep, the board supposedly draws current in the 100 microamp
 range, so it should still last a very long time on a 1000mah battery. An important point is that during deep sleep, most of main
-memory is powered off.  When it wakes up it is effectively like a reboot but the so-called RTC memory is kept active. The 
-main program can store stuff in this memory (which is 16K I think) and importantly the ULP processor uses an 8K subset of this
+memory is powered off.  When it wakes up it is effectively like a reboot but the so-called RTC memory is still active. The 
+main program can store stuff in this memory (which is 16K I think) and the ULP processor can use an 8K subset of this
 which is shared with the main program. 
-There isn't a C compiler for the ULP processor, so that bit has to be written in assembly with a rather limited 
+There isn't a C compiler for the ULP processor, so that part has to be written in assembly with a rather limited 
 [instruction set](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/ulp_instruction_set.html). The ULP program 
-lifecycle is a little strange. It's intended to run periodically, woken up by a configurable timer internal to the SOC. In this
+lifecycle is a little strange. It's intended to run periodically, woken up by a configurable timer internal to the SOC. In my
 case I have it running every 100 milliseconds and it will check to see if any buttons are pressed. If it detects a button press
-it will write the button that was pressed into the RTC memory and wakeup the main processor(s). If not, it will halt and be restarted by the timer.
+it will write the button that was pressed into the shared RTC memory and wakeup the main processor(s). If not, it will halt and be restarted by the timer.
 
-On boot, the main application does the following
+On boot the main application does the following:
 - Initialize the GPIO pins for controlling the button LEDs and button readers
-- Start a FreeRTOS task for controlling the LEDs based on a global variable. This way it can handle keeping the LEDS operational while the CPU is blocked in IO. (How cool is it that a tiny computer like this supports real multitasking?)
+- Start a FreeRTOS task for controlling the LEDs based on a global variable. This way it can handle keeping the LEDS operational while the CPU is blocked in IO. How cool is it that a tiny computer like this supports real multitasking?
 - If we're not waking from sleep, do a cute blinky dance to show off
-- If we are waking from sleep, check if the ULP program stashed a button press and act on it for the first button input loop
+- If we are waking from sleep, check if the ULP program stashed a button press to be acted on in the first button input loop
 - Join wifi and if that fails, do some angry blinking.
-- Look in the [Preferences](https://github.com/espressif/arduino-esp32/tree/master/libraries/Preferences) stored on the SOC's flash for the Sonos player's IP address (see later explanation on sonos networking)
-- If we don't know the IP address, perform sonos discovery
+- Look in the [Preferences](https://github.com/espressif/arduino-esp32/tree/master/libraries/Preferences) stored on the SOC's flash for the Sonos player's IP address 
+- If we don't know the IP address, perform Sonos discovery to find it
 - Enter a loop to check for button inputs.
-- If a button input occurs, light up the button LED for the duration of the association operation for user feedback.
-- More usefully, given the stored IP address for the target sonos, do the operation tied to the button.
-- After roughly 30 seconds (didn't want to introduce a clock, so just based on loop counting hueristics), prepare for deep sleep
+- If a button input occurs, light up the button LED for the duration of the association operation for user feedback and perform that operation.
+- After roughly 30 seconds of no button presses (didn't want to introduce a clock, so just based on loop counting hueristics), prepare for deep sleep
 
-Deep Sleep entails:
+Deep Sleep preparation entails:
 - Turn off wifi
 - Setup RTC IO for the button GPIO inputs and outputs used for the buttons.
 - Configure wakeup from ULP sources
@@ -88,7 +87,7 @@ Deep Sleep entails:
 - Start the ULP Program
 - Enter deep sleep
 
-## 3. Hardware
+## Hardware
 
 The hardware bits involved here beyond the ESP32 board are a 2x2 button breakout board from sparkfun, along with the associated 
 silicon buttons and some little plastic bits to hold everything together. The breakout board has places for full RGB LEDs to
@@ -109,7 +108,7 @@ The LED side of things is wired up to GPIO pins 17, 4, 0, and 2 in the same orde
 to the LED GND terminals on the breakout baord. GPIO 16 is used to power these in the `ledLoop()` function and is wired to the
 Blue LED terminal on the breakout board.
 
-## 4. Pictures
+## Pictures
 
 ### Full Project
 ![](images/all.jpg)
