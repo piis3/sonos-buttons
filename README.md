@@ -118,6 +118,6 @@ Blue LED terminal on the breakout board.
 ### Breakout board front
 ![](images/breakout-front.jpg)
 
-### Breakout board backl
+### Breakout board back
 ![](images/breakout-back.jpg)
 
