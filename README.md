@@ -9,7 +9,7 @@ I wanted something that I could place anywhere in the garage, so being able to r
 important considerations. I was clearly looking for a fun project here, otherwise I probably would have gone with some 
 AWS button concoction, or perhaps gone with one of the commercially available sonos remote control options.
 
-So I wound up going with a handlful of stuff from sparkfun:
+So I wound up going with a handful of stuff from Sparkfun:
 - [ESP32 Thing](https://www.sparkfun.com/products/13907)
 - [2x2 Button Pad](https://www.sparkfun.com/products/9277)
 - [Buttons](https://www.sparkfun.com/products/7836)
@@ -41,17 +41,17 @@ For this I recommend using the [SoCo](https://github.com/SoCo/SoCo) library. Onc
 ['RINCON_XXXXXXXXXXXX']
 ```
 
-Set your sonos player UID to the SONOS_UID constant in `sonos_buttons.cpp`, and while you're there, set your wifi credentials
+Set the SONOS_UID constant in `sonos_buttons.cpp` to the sonos player UID you want to contro and while you're there, set your wifi credentials
 to the SSID and PASSWORD macros.
 
-You'll also need an ESP32 development environment setup see [these instructions](https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html) and you'll need the [ULP Toolchain](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/ulp.html#installing-the-toolchain).
+You'll also need an ESP32 development environment setup: see [these instructions](https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html) and you'll need the [ULP Toolchain](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/ulp.html#installing-the-toolchain) too.
 
 ### Implementation
 
 Since power is a concern here, I wanted to make use of the deep sleep feature of the ESP32 SOC. This allows it to go into a
-state that draws *micro*amps of current, while still being able to respond to external stimuli. See (here)[https://docs.espressif.com/projects/esp-idf/en/latest/api-reference/system/sleep_modes.html] for details on that.
+state that draws *micro*amps of curren while still being able to respond to external stimuli. See (here)[https://docs.espressif.com/projects/esp-idf/en/latest/api-reference/system/sleep_modes.html] for details on that.
 
-After waking up from a deep sleep, the ESP32 has to rejoin wifi, which usually takes a couple of seconds, so one of the hardest things
+After waking up from a deep sleep the ESP32 has to rejoin wifi, which usually takes a couple of seconds, so one of the hardest things
 was to get it to remember what button was pressed to wake it up from deep sleep. I didn't have a lot of luck with the builtin 
 touchpad, or GPIO (ext1) based wakeup solutions. The ext1 stuff kept going into sleep/wake loops, and the touchpad wakeups 
 wouldn't report the correct GPIO input for the wakeup source. The ESP32 supports wakeup events from a Ultra Low Power (ULP) 
