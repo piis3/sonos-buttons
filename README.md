@@ -20,8 +20,8 @@ The ESP32 fit the bill for the project since it has a ridiculously low power dra
 built in and the sparkfun board comes with a LIPO battery charger on it.
 
 ## 2. Software
-I had initially gone with using the Sonos public control API, which goes through sonos' servers to control your local sonos
-player. After getting this all working I found the latency period involved it to be less than ideal, not to mention that sonos
+I had initially used the Sonos public control API, which goes through Sonos' servers to control your local sonos
+player. After getting this all working I found the latency period to be less than ideal. Sonos also
 had a multi day service outage while I was wrapping up work on that version. I settled on using the local network UPnP based 
 API that the official sonos applications use. Much of the detail on this came from [SoCo](https://github.com/SoCo/SoCo), so 
 thanks for that!
@@ -41,8 +41,8 @@ For this I recommend using the [SoCo](https://github.com/SoCo/SoCo) library. Onc
 ['RINCON_XXXXXXXXXXXX']
 ```
 
-Set the SONOS_UID constant in `sonos_buttons.cpp` to the sonos player UID you want to contro and while you're there, set your wifi credentials
-to the SSID and PASSWORD macros.
+Set the SONOS_UID constant in `sonos_buttons.cpp` to the sonos player UID you want to control and while you're there set the
+SSID and PASSWORD macros to your WiFi credentials..
 
 You'll also need an ESP32 development environment setup: see [these instructions](https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html) and you'll need the [ULP Toolchain](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/ulp.html#installing-the-toolchain) too.
 
