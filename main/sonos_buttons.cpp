@@ -24,11 +24,17 @@
 #define NUM_LED_ROWS (1)
 
 #define MAX_DEBOUNCE (3)
-#define SSID "your ssid"
-#define PASSWORD "your password"
 
 // This is roughly 30 seconds with the various delays + scanning time
 #define IDLE_LOOPS_SLEEPY 4500
+
+/*
+ * Your configuration goes here
+ */
+#define SSID "your ssid"
+#define PASSWORD "your password"
+static const std::string SONOS_UID = std::string("your sonos player UID");
+
 
 static const gpio_num_t btncolumnpins[NUM_BTN_COLUMNS] = {GPIO_NUM_12, GPIO_NUM_14, GPIO_NUM_27, GPIO_NUM_26};
 static const gpio_num_t btnrowpins[NUM_BTN_ROWS]       = {GPIO_NUM_13};
@@ -41,7 +47,6 @@ extern const uint8_t bin_end[]   asm("_binary_ulp_main_bin_end");
 
 static int8_t debounce_count[NUM_BTN_COLUMNS][NUM_BTN_ROWS];
 
-static const std::string SONOS_UID = std::string("your sonos player UID");
 
 // bit field representing the buttons activated on the last scan loop
 static uint8_t buttons_released = 0;
@@ -166,11 +171,12 @@ void ledLoop( void * args ) {
 }
 
 void blinkAll(uint8_t times, int waitTime) {
+    uint8_t startVal = LEDS_lit;
     for (uint8_t i = 0; i < times; i++) {
        delay(waitTime);
        LEDS_lit = 255;
        delay(waitTime);
-       LEDS_lit = 0;
+       LEDS_lit = startVal;
     }
 }
 
@@ -192,6 +198,7 @@ boolean didJustWake() {
             Serial.println("Woke up from sleep (ULP)");
             Serial.printf("GPIO pressed was %d\n", ulp_wake_gpio_bit);
             sleep_buttons = ulp_wake_gpio_bit;
+            LEDS_lit = sleep_buttons;
             wokeUp = true;
             break;
         default : 
