@@ -49,7 +49,7 @@ You'll also need an ESP32 development environment setup: see [these instructions
 ### Implementation
 
 Since power is a concern here, I wanted to make use of the deep sleep feature of the ESP32 SOC. This allows it to go into a
-state that draws *micro*amps of current while still being able to respond to external stimuli. See (here)[https://docs.espressif.com/projects/esp-idf/en/latest/api-reference/system/sleep_modes.html] for details on that.
+state that draws *micro*amps of current while still being able to respond to external stimuli. See [the ESP32 sleep docs](https://docs.espressif.com/projects/esp-idf/en/latest/api-reference/system/sleep_modes.html) for details on that.
 
 After waking up from a deep sleep the ESP32 has to rejoin wifi, which usually takes a couple of seconds, so one of the hardest things
 was to get it to remember what button was pressed to wake it up from deep sleep. I didn't have a lot of luck with the built-in 
