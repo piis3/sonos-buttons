@@ -2,7 +2,7 @@
 
 ## 1. Intro
 This project is a hobby project for controlling a sonos player using an ESP32 board and a button pad. I got the idea for the 
-project from working in my garage and having gloves on or dirty hands and not wanting to mess with my phone to control the 
+project while working in my garage and having gloves on or dirty hands and not wanting to mess with my phone to control the 
 sonos player in there. Obviously the lazy thing would have been to get a voice assistant for there, but what fun is that?
 
 I wanted something that I could place anywhere in the garage, so being able to run from battery (low power) and WiFi were 
