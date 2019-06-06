@@ -35,7 +35,6 @@
 #define PASSWORD "your password"
 static const std::string SONOS_UID = std::string("your sonos player UID");
 
-
 static const gpio_num_t btncolumnpins[NUM_BTN_COLUMNS] = {GPIO_NUM_12, GPIO_NUM_14, GPIO_NUM_27, GPIO_NUM_26};
 static const gpio_num_t btnrowpins[NUM_BTN_ROWS]       = {GPIO_NUM_13};
 
@@ -51,7 +50,7 @@ static int8_t debounce_count[NUM_BTN_COLUMNS][NUM_BTN_ROWS];
 // bit field representing the buttons activated on the last scan loop
 static uint8_t buttons_released = 0;
 // bit field representing the buttons activated that caused us to wakeup
-static uint8_t sleep_buttons = 0;
+uint8_t sleep_buttons = 0;
 
 static uint8_t LEDS_lit = 0;
 static IPAddress targetSonos;
@@ -185,32 +184,16 @@ boolean didJustWake() {
     wakeup_reason = esp_sleep_get_wakeup_cause();
 
     boolean wokeUp = false;
-    boolean touchWakeUp = false;
-    switch(wakeup_reason) {
-        case ESP_SLEEP_WAKEUP_EXT0 : 
-        case ESP_SLEEP_WAKEUP_EXT1 : 
-        case ESP_SLEEP_WAKEUP_TIMER :
-        case ESP_SLEEP_WAKEUP_TOUCHPAD : 
-            Serial.println("Woke up from touch");
-            touchWakeUp = true;
-            // fall through
-        case ESP_SLEEP_WAKEUP_ULP : 
-            Serial.println("Woke up from sleep (ULP)");
-            Serial.printf("GPIO pressed was %d\n", ulp_wake_gpio_bit);
-            sleep_buttons = ulp_wake_gpio_bit;
-            LEDS_lit = sleep_buttons;
-            wokeUp = true;
-            break;
-        default : 
-            Serial.printf("Wakeup was not caused by deep sleep: %d\n",wakeup_reason); 
-            wokeUp = false;
-            break;
-    }
-
-    if (touchWakeUp) {
-        touch_pad_t pin;
-        pin = esp_sleep_get_touchpad_wakeup_status();
-        Serial.printf("Got touch wakeup from %d\n", pin);
+    if (wakeup_reason == ESP_SLEEP_WAKEUP_ULP) {
+        Serial.println("Woke up from sleep (ULP)");
+        sleep_buttons = ulp_wake_gpio_bit & 0xFF;
+        Serial.printf("GPIO pressed was %d\n", ulp_wake_gpio_bit & 0xFF);
+        ulp_wake_gpio_bit = 0;
+        LEDS_lit = sleep_buttons;
+        wokeUp = true;
+    } else {
+        Serial.printf("Wakeup was not caused by deep sleep: %d\n",wakeup_reason); 
+        wokeUp = false;
     }
 
     return wokeUp;
@@ -320,9 +303,10 @@ void napTime() {
         bin_start,
         (bin_end - bin_start) / sizeof(uint32_t)) 
     );
-
+    // Reset the ULP wake bit to zero in case an intervening run set it to a button and it wasn't cleaned up
+    ulp_wake_gpio_bit = 0;
     Serial.println("Going to sleep now");
-    ESP_ERROR_CHECK( ulp_run(&ulp_test_set - RTC_SLOW_MEM) );
+    ESP_ERROR_CHECK( ulp_run(&ulp_scan_btns - RTC_SLOW_MEM) );
     esp_deep_sleep_start();
 }
 

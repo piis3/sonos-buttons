@@ -1,6 +1,6 @@
 # Sonos control pad with ESP32 Thing board
 
-This project is a hobby project for controlling a sonos player using an ESP32 board and a button pad. I got the idea for the 
+This is a hobby project for controlling a sonos player using an ESP32 board and a button pad. I got the idea for the 
 project while working in my garage and having gloves on or dirty hands and not wanting to mess with my phone to control the 
 sonos player in there. Obviously the lazy thing would have been to get a voice assistant in there, but what fun is that?
 
