@@ -43,7 +43,13 @@ For this I recommend using the [SoCo](https://github.com/SoCo/SoCo) library. Onc
 Set the SONOS_UID constant in `sonos_buttons.cpp` to the sonos player UID you want to control and while you're there set the
 SSID and PASSWORD macros to your WiFi credentials..
 
-You'll also need an ESP32 development environment setup: see [these instructions](https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html) and you'll need the [ULP Toolchain](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/ulp.html#installing-the-toolchain) too.
+### Building
+
+You'll need an ESP32 development environment setup: see [these instructions](https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html) and you'll need the [ULP Toolchain](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/ulp.html#installing-the-toolchain) too.
+
+Once you have the environment setup, run `make menuconfig` and set the default serial port your ESP32 board appears as. This is under the "Serial flasher config" menu item. There's a ton of other options, but that's the only one you need to change.
+
+To flash run `make flash` and then to see serial output run `make monitor`. This will build all of the FreeRTOS stuff too, which is a lot, so make's `-j` argument could be helpful here to use multiple processors.
 
 ### Implementation
 
