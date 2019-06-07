@@ -11,11 +11,15 @@
 
     .text
 
+// Gets assigned to wake_gpio_bit on wakeup
+current_button:
+    .long 0
+
     // Bitmask index of the button that we woke up for.
     // The index of the GPIO pins are GPIO_12, GPIO_14, GPIO_27, GPIO_26
     .global wake_gpio_bit
 wake_gpio_bit:
-    .long 
+    .long 0
 
 btnbounce_12:
     .long BOUNCE_COUNT
@@ -26,15 +30,11 @@ btnbounce_27:
 btnbounce_26:
     .long BOUNCE_COUNT 
 
-    // Gets assigned to wake_gpio_bit on wakeup
-current_button:
-    .long 
-
     .global scan_btns
 scan_btns:
     // Clear the wake_gpio_bit variable
     move r3, wake_gpio_bit
-    move r2, 0x00
+    move r2, 0x0000
     st r2, r3, 0
     // Clear the bounce counters
     move r3, btnbounce_12
@@ -172,8 +172,8 @@ notpressed_26:
     /* Reset gpio to high */
     WRITE_RTC_REG(RTC_GPIO_OUT_W1TS_REG, RTC_GPIO_OUT_DATA_W1TS_S + RTCIO_GPIO26_CHANNEL, 1, 1)
 
-    /* we didn't find any buttons pressed. HALT and let the timer wake us up again. */
-    // make sure out wake bit is cleared
+    /* we didn't find any buttons pressed. HALT and let the timer wake us up again. 
+       make sure wake bit is cleared */
     move r1, wake_gpio_bit
     move r0, 0
     st r0, r1, 0
@@ -193,5 +193,6 @@ wake_up:
     ld r0, r1, 0
     st r0, r2, 0 /* store the current button value into wake gpio */
 
+    WRITE_RTC_FIELD(RTC_CNTL_STATE0_REG, RTC_CNTL_ULP_CP_SLP_TIMER_EN, 0)
     wake
     halt

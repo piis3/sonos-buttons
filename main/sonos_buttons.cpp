@@ -193,7 +193,7 @@ boolean didJustWake() {
         wokeUp = true;
     } else {
         Serial.printf("Wakeup was not caused by deep sleep: %d\n",wakeup_reason); 
-        wokeUp = false;
+        sleep_buttons = 0;
     }
 
     return wokeUp;
@@ -233,7 +233,6 @@ void setup() {
     uint8_t wifiTries = 0;
     wl_status_t status = WiFi.status();
     while (status != WL_CONNECTED && wifiTries < 10) {
-        Serial.printf("Wifi status is: %d\n", status);
         delay(500);
         status = WiFi.status();
         wifiTries += 1;
@@ -296,8 +295,6 @@ void napTime() {
         rtc_gpio_hold_en(btnrowpins[i]);
     }
     esp_sleep_enable_ulp_wakeup();
-    // Wakeup the ULP processor every 100 ms to check for button presses
-    ESP_ERROR_CHECK( ulp_set_wakeup_period(0, 100000) );
     ESP_ERROR_CHECK( ulp_load_binary(
         0 /* load address, set to 0 when using default linker scripts */,
         bin_start,
@@ -307,6 +304,8 @@ void napTime() {
     ulp_wake_gpio_bit = 0;
     Serial.println("Going to sleep now");
     ESP_ERROR_CHECK( ulp_run(&ulp_scan_btns - RTC_SLOW_MEM) );
+    // Wakeup the ULP processor every 100 ms to check for button presses
+    ESP_ERROR_CHECK( ulp_set_wakeup_period(0, 100000) );
     esp_deep_sleep_start();
 }
 
