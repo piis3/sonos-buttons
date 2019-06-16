@@ -93,6 +93,22 @@ Deep Sleep preparation entails:
 - Start the ULP Program
 - Enter deep sleep
 
+The ULP Program uses essentially the same mechanism as the main processor code for detecting button proesses so the following mostly applies to both. There is one pin for each button plus a single "reader" pin, details of which are described in the hardware section.
+- Configure the reader pin for input only, with the pullup resistor enabled.
+- Set the four button pins to HIGH
+- Loop over each button pin
+    - Set the button pin to LOW
+    - Wait a short time
+    - Read from the reader pin
+    - If the reader pin reads as LOW, then we increment a bounce counter for the button pin, if it's HIGH then we set the bounce counter to 0
+    - Set the button pin back to HIGH
+    - If the bounce counter for a button reaches 3, consider it a button press.
+- If a button is pressed:
+    - Write the pressed button into a variable in memory shared between the ULP and the main processors.
+    - Wakeup the main processor
+    - Disable the ULP wakeup timer so it doesn't keep running with the main processor is running
+    - Halt the ULP program
+
 ## Hardware
 
 The hardware bits involved here beyond the ESP32 board are a 2x2 button breakout board from sparkfun, along with the associated 
