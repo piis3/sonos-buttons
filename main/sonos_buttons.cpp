@@ -55,6 +55,68 @@ uint8_t sleep_buttons = 0;
 static uint8_t LEDS_lit = 0;
 static IPAddress targetSonos;
 
+// Store the base station mac address and channel in RTC memory so we can re-connect more quickly
+static RTC_DATA_ATTR struct {
+    uint8_t bssid [6];
+    uint16_t channel; // Make this 16 bites to align on the 32 bit boundary
+} wifi_cache;
+
+static RTC_DATA_ATTR uint32_t wifi_cache_checksum;
+
+void clearWifiCache() {
+    wifi_cache_checksum = 1;
+    for (uint32_t i = 0; i < sizeof(wifi_cache.bssid); i++) {
+        wifi_cache.bssid[i] = 0xFF;
+    }
+    wifi_cache.channel = 0;
+}
+
+bool checkWifiCache() {
+    uint32_t readSum = 0;
+    uint32_t *p = (uint32_t *) wifi_cache.bssid;
+    for (uint32_t i = 0; i < sizeof(wifi_cache) / 4; i++) {
+        readSum += p[i];
+    }
+
+    bool hasRealData = false;
+    for (uint32_t i = 0; i < sizeof(wifi_cache.bssid); i++) {
+        hasRealData |= (wifi_cache.bssid[i] != 0 && wifi_cache.bssid[i] != 0xFF);
+    }
+    if (readSum == wifi_cache_checksum && hasRealData) {
+        Serial.printf("Good Wifi cache checksum %d, %X:%X:%X:%X:%X:%X, channel %d\n",
+            readSum,
+            wifi_cache.bssid[0],
+            wifi_cache.bssid[1],
+            wifi_cache.bssid[2],
+            wifi_cache.bssid[3],
+            wifi_cache.bssid[4],
+            wifi_cache.bssid[5],
+            wifi_cache.channel
+        );
+        return true;
+    } else {
+        Serial.println("Bad wifi cache checksum, clearing storage");
+        clearWifiCache();
+        return false;
+    }
+}
+
+void storeWifiCache() {
+    uint8_t *bssid = WiFi.BSSID();
+    memcpy(wifi_cache.bssid, bssid, sizeof(wifi_cache.bssid));
+    wifi_cache.channel = WiFi.channel();
+
+    uint32_t checkSum = 0;
+    uint32_t *p = (uint32_t *) wifi_cache.bssid;
+
+    for (uint32_t i = 0; i < sizeof(wifi_cache) / 4; i++) {
+        checkSum += p[i];
+    }
+
+    wifi_cache_checksum = checkSum;
+}
+
+
 static void setuppins() {
     uint8_t i, j;
 
@@ -227,19 +289,26 @@ void setup() {
         LEDS_lit = 0;
     }
     WiFi.mode(WIFI_STA);
-    WiFi.begin(SSID, PASSWORD);
+    if (checkWifiCache()) {
+        // Connect using a cached bssid and channel
+        Serial.println("Connecting using cached wifi config");
+        WiFi.begin(SSID, PASSWORD, wifi_cache.channel, wifi_cache.bssid);
+    } else {
+        WiFi.begin(SSID, PASSWORD);
+    }
 
     Serial.print("Waiting for WiFi to connect...");
     uint8_t wifiTries = 0;
     wl_status_t status = WiFi.status();
-    while (status != WL_CONNECTED && wifiTries < 10) {
-        delay(500);
+    while (status != WL_CONNECTED && wifiTries < 100) {
+        delay(50);
         status = WiFi.status();
         wifiTries += 1;
     }
   
     if (! WiFi.isConnected() ) {
         Serial.println(" Failed, restarting");
+        clearWifiCache();
         delay(1000);
         blinkAll(10, 100);
         ESP.restart();
@@ -276,6 +345,9 @@ void setup() {
 }
 
 void napTime() {
+    if (WiFi.isConnected()) {
+        storeWifiCache();
+    }
     esp_wifi_stop();
     Serial.println("Starting ULP processor");
 
