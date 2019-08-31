@@ -16,6 +16,10 @@
 #include "ulp_main.h"
 #include "sonos.h"
 #include <esp32/ulp.h>
+#include "config.h"
+
+#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+#include "esp_log.h"
 
 //config variables
 #define NUM_BTN_COLUMNS (4)
@@ -28,13 +32,6 @@
 // This is roughly 30 seconds with the various delays + scanning time
 #define IDLE_LOOPS_SLEEPY 4500
 
-/*
- * Your configuration goes here
- */
-#define SSID "your ssid"
-#define PASSWORD "your password"
-static const std::string SONOS_UID = std::string("your sonos player UID");
-
 static const gpio_num_t btncolumnpins[NUM_BTN_COLUMNS] = {GPIO_NUM_12, GPIO_NUM_14, GPIO_NUM_27, GPIO_NUM_26};
 static const gpio_num_t btnrowpins[NUM_BTN_ROWS]       = {GPIO_NUM_13};
 
@@ -45,7 +42,7 @@ extern const uint8_t bin_start[] asm("_binary_ulp_main_bin_start");
 extern const uint8_t bin_end[]   asm("_binary_ulp_main_bin_end");
 
 static int8_t debounce_count[NUM_BTN_COLUMNS][NUM_BTN_ROWS];
-
+static const char* TAG = "SonosButtons";
 
 // bit field representing the buttons activated on the last scan loop
 static uint8_t buttons_released = 0;
@@ -83,7 +80,7 @@ bool checkWifiCache() {
         hasRealData |= (wifi_cache.bssid[i] != 0 && wifi_cache.bssid[i] != 0xFF);
     }
     if (readSum == wifi_cache_checksum && hasRealData) {
-        Serial.printf("Good Wifi cache checksum %d, %X:%X:%X:%X:%X:%X, channel %d\n",
+        ESP_LOGD(TAG, "Good Wifi cache checksum %d, %X:%X:%X:%X:%X:%X, channel %d\n",
             readSum,
             wifi_cache.bssid[0],
             wifi_cache.bssid[1],
@@ -95,7 +92,7 @@ bool checkWifiCache() {
         );
         return true;
     } else {
-        Serial.println("Bad wifi cache checksum, clearing storage");
+        ESP_LOGI(TAG, "Bad wifi cache checksum, clearing storage");
         clearWifiCache();
         return false;
     }
@@ -247,18 +244,54 @@ boolean didJustWake() {
 
     boolean wokeUp = false;
     if (wakeup_reason == ESP_SLEEP_WAKEUP_ULP) {
-        Serial.println("Woke up from sleep (ULP)");
+        ESP_LOGI(TAG, "Woke up from sleep (ULP)");
         sleep_buttons = ulp_wake_gpio_bit & 0xFF;
-        Serial.printf("GPIO pressed was %d\n", ulp_wake_gpio_bit & 0xFF);
+        ESP_LOGD(TAG, "GPIO pressed was %d\n", ulp_wake_gpio_bit & 0xFF);
         ulp_wake_gpio_bit = 0;
         LEDS_lit = sleep_buttons;
         wokeUp = true;
     } else {
-        Serial.printf("Wakeup was not caused by deep sleep: %d\n",wakeup_reason); 
+        ESP_LOGW(TAG, "Wakeup was not caused by deep sleep: %d\n",wakeup_reason); 
         sleep_buttons = 0;
     }
 
     return wokeUp;
+}
+
+boolean connectWifi() {
+    WiFi.mode(WIFI_STA);
+    bool wasCached = checkWifiCache();
+    if (wasCached) {
+        // Connect using a cached bssid and channel
+        ESP_LOGD(TAG, "Connecting using cached wifi config");
+        WiFi.begin(SSID, PASSWORD, wifi_cache.channel, wifi_cache.bssid, true);
+    } else {
+        ESP_LOGD(TAG, "Connecting to without cached wifi config");
+        WiFi.begin(SSID, PASSWORD);
+    }
+
+    ESP_LOGD(TAG, "Waiting for WiFi to connect...");
+    uint8_t wifiTries = 0;
+    wl_status_t status = WiFi.status();
+    while (status != WL_CONNECTED && status != WL_CONNECT_FAILED && wifiTries < 50) {
+        delay(50);
+        status = WiFi.status();
+        wifiTries += 1;
+    }
+
+    if (! WiFi.isConnected() ) {
+        if (wasCached) {
+            clearWifiCache();
+            return connectWifi();
+        } else {
+            ESP_LOGE(TAG, "WiFi connect failed, restarting");
+            delay(1000);
+            blinkAll(10, 100);
+            ESP.restart();
+        }
+    }
+    ESP_LOGI(TAG, "WiFi connect succeeded");
+    return true;
 }
 
 void setup() {
@@ -288,32 +321,7 @@ void setup() {
         delay(250);
         LEDS_lit = 0;
     }
-    WiFi.mode(WIFI_STA);
-    if (checkWifiCache()) {
-        // Connect using a cached bssid and channel
-        Serial.println("Connecting using cached wifi config");
-        WiFi.begin(SSID, PASSWORD, wifi_cache.channel, wifi_cache.bssid);
-    } else {
-        WiFi.begin(SSID, PASSWORD);
-    }
-
-    Serial.print("Waiting for WiFi to connect...");
-    uint8_t wifiTries = 0;
-    wl_status_t status = WiFi.status();
-    while (status != WL_CONNECTED && wifiTries < 100) {
-        delay(50);
-        status = WiFi.status();
-        wifiTries += 1;
-    }
-  
-    if (! WiFi.isConnected() ) {
-        Serial.println(" Failed, restarting");
-        clearWifiCache();
-        delay(1000);
-        blinkAll(10, 100);
-        ESP.restart();
-    }
-    Serial.println(" connected");
+    connectWifi();
 
     LEDS_lit = 255;
     delay(100);
@@ -325,7 +333,7 @@ void setup() {
     String prefUid = prefs.getString("playerUid", "");
     prefs.end();
     // If the configured sonos UID is different than what we stored, we need to forget our cached IP
-    if (prefUid != String(SONOS_UID.c_str())) {
+    if (prefUid != String(SONOS_UID)) {
         prefs.begin("sonos", false);
         prefs.remove("playerAddress");
         prefs.end();
@@ -336,11 +344,11 @@ void setup() {
         ip.fromString(addr.c_str());
         if (ip) {
             targetSonos = ip;
-            Serial.printf("Using cached sonos IP %s\n", targetSonos.toString().c_str());
+            ESP_LOGI(TAG, "Using cached sonos IP %s", targetSonos.toString().c_str());
         }
     }
     if (!targetSonos) {
-        targetSonos = discoverSonos(SONOS_UID);
+        targetSonos = discoverSonos(std::string(SONOS_UID));
     }
 }
 
@@ -349,7 +357,7 @@ void napTime() {
         storeWifiCache();
     }
     esp_wifi_stop();
-    Serial.println("Starting ULP processor");
+    ESP_LOGD(TAG, "Starting ULP processor");
 
     for (uint8_t i = 0; i < NUM_BTN_COLUMNS; i++) {
         rtc_gpio_init(btncolumnpins[i]);
@@ -374,7 +382,7 @@ void napTime() {
     );
     // Reset the ULP wake bit to zero in case an intervening run set it to a button and it wasn't cleaned up
     ulp_wake_gpio_bit = 0;
-    Serial.println("Going to sleep now");
+    ESP_LOGI(TAG, "Going to sleep now");
     ESP_ERROR_CHECK( ulp_run(&ulp_scan_btns - RTC_SLOW_MEM) );
     // Wakeup the ULP processor every 100 ms to check for button presses
     ESP_ERROR_CHECK( ulp_set_wakeup_period(0, 100000) );
@@ -384,17 +392,17 @@ void napTime() {
 // Second layer of sonos operation wrapper to handle the rediscovery logic
 void doSonos(int (*operation)(HTTPClient *http, IPAddress targetSonos)) {
     if (!targetSonos) {
-        targetSonos = discoverSonos(SONOS_UID);
+        targetSonos = discoverSonos(std::string(SONOS_UID));
     }
     if (!targetSonos) {
-        Serial.println("Couldn't find the right sonos, bailing");
+        ESP_LOGE(TAG, "Couldn't find the right sonos, bailing");
         return;
     }
 
     int error = sonosOperation(operation, targetSonos);
     if (error) {
         // try rediscovering
-        targetSonos = discoverSonos(SONOS_UID);
+        targetSonos = discoverSonos(std::string(SONOS_UID));
     }
 }
 
@@ -408,23 +416,23 @@ void loop() {
     if (handle_buttons != 0) {
         idleLoopCount = 0;
         if (bitRead(handle_buttons, 0)) {
-            Serial.println("Sending play/pause");
+            ESP_LOGI(TAG, "Sending play/pause");
             doSonos(sonosPlay);
             bitClear(LEDS_lit, 0);
         } else if (bitRead(handle_buttons, 1)) { 
-            Serial.println("Sending next");
+            ESP_LOGI(TAG, "Sending next");
             doSonos(sonosNext);
             bitClear(LEDS_lit, 1);
         } else if (bitRead(handle_buttons, 2)) {
-            Serial.println("Sending volume up");
+            ESP_LOGI(TAG, "Sending volume up");
             doSonos(volumeUp);
             bitClear(LEDS_lit, 2);
         } else if (bitRead(handle_buttons, 3)) {
-            Serial.println("Sending volume down");
+            ESP_LOGI(TAG, "Sending volume down");
             doSonos(volumeDown);
             bitClear(LEDS_lit, 3);
         } else {
-            Serial.println("Not implemented");
+            ESP_LOGE(TAG, "Not implemented");
             delay(1000);
             LEDS_lit = 0;
         }
