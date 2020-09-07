@@ -35,8 +35,8 @@
 static const gpio_num_t btncolumnpins[NUM_BTN_COLUMNS] = {GPIO_NUM_12, GPIO_NUM_14, GPIO_NUM_27, GPIO_NUM_26};
 static const gpio_num_t btnrowpins[NUM_BTN_ROWS]       = {GPIO_NUM_13};
 
-static const gpio_num_t ledcolumnpins[NUM_LED_COLUMNS] = {GPIO_NUM_17, GPIO_NUM_4, GPIO_NUM_0, GPIO_NUM_2};
-static const gpio_num_t colorpins[NUM_LED_ROWS]        = {GPIO_NUM_16};
+static const gpio_num_t ledcolumnpins[NUM_LED_COLUMNS] = {GPIO_NUM_25, GPIO_NUM_4, GPIO_NUM_5, GPIO_NUM_18};
+static const gpio_num_t colorpins[NUM_LED_ROWS]        = {GPIO_NUM_32};
 
 extern const uint8_t bin_start[] asm("_binary_ulp_main_bin_start");
 extern const uint8_t bin_end[]   asm("_binary_ulp_main_bin_end");

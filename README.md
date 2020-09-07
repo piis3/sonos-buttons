@@ -1,4 +1,3 @@
-# Sonos control pad with ESP32 Thing board
 
 This is a hobby project for controlling a sonos player using an ESP32 board and a button pad. I got the idea for the 
 project while working in my garage and having gloves on or dirty hands and not wanting to mess with my phone to control the 
@@ -45,7 +44,9 @@ SSID and PASSWORD macros to your WiFi credentials..
 
 ### Building
 
-You'll need an ESP32 development environment setup: see [these instructions](https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html) and you'll need the [ULP Toolchain](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/ulp.html#installing-the-toolchain) too.
+You'll need an ESP32 development environment setup: see [these instructions](https://docs.espressif.com/projects/esp-idf/en/v3.2.3/get-started/index.html) and you'll need the [ULP Toolchain](https://docs.espressif.com/projects/esp-idf/en/v3.2.3/api-guides/ulp.html#installing-the-toolchain) too. 
+Because the esp-arduino module currently requires the v3.2 branch of esp-IDF, you'll need to stick with that version for compiling. 
+It looks like the 4.0 branch completely changed how builds work so this project would likely need some updates too.
 
 Once you have the environment setup, run `make menuconfig` and set the default serial port your ESP32 board appears as. This is under the "Serial flasher config" menu item. There's a ton of other options, but that's the only one you need to change.
 
@@ -126,9 +127,9 @@ The reader pin on the buttons is wired to the switch terminal on the breakout bo
 You can change this around in the code, but for the ULP bit to work the GPIO pins for the buttons (not LEDS) MUST be 
 available from the RTC controller. See section 4.11, RTC_MUX Pin List, on page 57 of the [ESP 32 Technical Reference Manual](https://www.espressif.com/sites/default/files/documentation/esp32_technical_reference_manual_en.pdf).
 
-The LED side of things is wired up to GPIO pins 17, 4, 0, and 2 in the same order with the buttons listed above. These are wired
-to the LED GND terminals on the breakout baord. GPIO 16 is used to power these in the `ledLoop()` function and is wired to the
-Blue LED terminal on the breakout board.
+The LED side of things is wired up to GPIO pins 25, 4, 5, and 18 in the same order with the buttons listed above. These are wired
+to the LED GND terminals on the breakout baord. GPIO 32 is used to power these in the `ledLoop()` function and is wired to the
+Blue LED terminal on the breakout board. The LED pins were chosen to also be compatible with the Sparkfun WROOM dev board as well.
 
 ## Pictures
 
