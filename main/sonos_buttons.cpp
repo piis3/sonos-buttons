@@ -33,7 +33,7 @@
 #define IDLE_LOOPS_SLEEPY 4500
 
 static const gpio_num_t btncolumnpins[NUM_BTN_COLUMNS] = {GPIO_NUM_12, GPIO_NUM_14, GPIO_NUM_27, GPIO_NUM_26};
-static const gpio_num_t btnrowpins[NUM_BTN_ROWS]       = {GPIO_NUM_13};
+static const gpio_num_t btnrowpins[NUM_BTN_ROWS]       = {GPIO_NUM_33};
 
 static const gpio_num_t ledcolumnpins[NUM_LED_COLUMNS] = {GPIO_NUM_25, GPIO_NUM_4, GPIO_NUM_5, GPIO_NUM_18};
 static const gpio_num_t colorpins[NUM_LED_ROWS]        = {GPIO_NUM_32};
@@ -374,6 +374,7 @@ void napTime() {
         rtc_gpio_pullup_en(btnrowpins[i]);
         rtc_gpio_hold_en(btnrowpins[i]);
     }
+
     esp_sleep_enable_ulp_wakeup();
     ESP_ERROR_CHECK( ulp_load_binary(
         0 /* load address, set to 0 when using default linker scripts */,

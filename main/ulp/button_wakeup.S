@@ -5,7 +5,7 @@
 
 #define BOUNCE_COUNT 3
 // number of cycles to wait between button scan steps
-#define STEP_WAIT 2000
+#define STEP_WAIT 1000
 
     .bss
 
@@ -61,8 +61,8 @@ handle_gpio_12:
     /* Set GPIO 12 to LOW */
     WRITE_RTC_REG(RTC_GPIO_OUT_W1TC_REG, RTC_GPIO_OUT_DATA_W1TC_S + RTCIO_GPIO12_CHANNEL, 1, 1)
     wait STEP_WAIT
-    /* Read gpio 13 state into R0 */
-    READ_RTC_REG(RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S + RTCIO_GPIO13_CHANNEL, 1)
+    /* Read gpio 33 state into R0 */
+    READ_RTC_REG(RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S + RTCIO_GPIO33_CHANNEL, 1)
     jumpr notpressed_12, 1, GE        /* if we read high, then button wasn't pressed, move past the incrementing */
     /* Button was pressed ... */
     move r3, btnbounce_12   /* decrement the bounce counter and check if we need to wake_up */
@@ -91,8 +91,8 @@ handle_gpio_14:
     /* Set GPIO 14 to LOW */
     WRITE_RTC_REG(RTC_GPIO_OUT_W1TC_REG, RTC_GPIO_OUT_DATA_W1TC_S + RTCIO_GPIO14_CHANNEL, 1, 1)
     wait STEP_WAIT
-    /* Read gpio 13 state into R0 */
-    READ_RTC_REG(RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S + RTCIO_GPIO13_CHANNEL, 1)
+    /* Read gpio 33 state into R0 */
+    READ_RTC_REG(RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S + RTCIO_GPIO33_CHANNEL, 1)
     jumpr notpressed_14, 1, GE        /* if we read high, then button wasn't pressed, move past the incrementing */
     /* Button was pressed ... */
     move r3, btnbounce_14   /* decrement the bounce counter and check if we need to wake_up */
@@ -121,8 +121,8 @@ handle_gpio_27:
     /* Set GPIO 27 to LOW */
     WRITE_RTC_REG(RTC_GPIO_OUT_W1TC_REG, RTC_GPIO_OUT_DATA_W1TC_S + RTCIO_GPIO27_CHANNEL, 1, 1)
     wait STEP_WAIT
-    /* Read gpio 13 state into R0 */
-    READ_RTC_REG(RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S + RTCIO_GPIO13_CHANNEL, 1)
+    /* Read gpio 33 state into R0 */
+    READ_RTC_REG(RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S + RTCIO_GPIO33_CHANNEL, 1)
     jumpr notpressed_27, 1, GE        /* if we read high, then button wasn't pressed, move past the incrementing */
     /* Button was pressed ... */
     move r3, btnbounce_27   /* decrement the bounce counter and check if we need to wake_up */
@@ -151,8 +151,8 @@ handle_gpio_26:
     /* Set GPIO 26 to LOW */
     WRITE_RTC_REG(RTC_GPIO_OUT_W1TC_REG, RTC_GPIO_OUT_DATA_W1TC_S + RTCIO_GPIO26_CHANNEL, 1, 1)
     wait STEP_WAIT
-    /* Read gpio 13 state into R0 */
-    READ_RTC_REG(RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S + RTCIO_GPIO13_CHANNEL, 1)
+    /* Read gpio 33 state into R0 */
+    READ_RTC_REG(RTC_GPIO_IN_REG, RTC_GPIO_IN_NEXT_S + RTCIO_GPIO33_CHANNEL, 1)
     jumpr notpressed_26, 1, GE        /* if we read high, then button wasn't pressed, move past the incrementing */
     /* Button was pressed ... */
     move r3, btnbounce_26   /* decrement the bounce counter and check if we need to wake_up */
