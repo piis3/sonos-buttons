@@ -123,7 +123,7 @@ The button breakout board also has holes for diodes to prevent signals bleeding 
 button array. I'm not great with electronics stuff, but I don't think this is neccessary with a 2x2 grid where each button has it's own input anyway and is only needed for 4x4 grids. I dutifully soldered them on anyway.
 
 The button side of things is wired up with the switch ground terminals on the breakout board, wired to pins 12, 14, 27 and 26.
-The reader pin on the buttons is wired to the switch terminal on the breakout board and GPIO 13 on the ESP32.
+The reader pin on the buttons is wired to the switch terminal on the breakout board and GPIO 33 on the ESP32.
 You can change this around in the code, but for the ULP bit to work the GPIO pins for the buttons (not LEDS) MUST be 
 available from the RTC controller. See section 4.11, RTC_MUX Pin List, on page 57 of the [ESP 32 Technical Reference Manual](https://www.espressif.com/sites/default/files/documentation/esp32_technical_reference_manual_en.pdf).
 
