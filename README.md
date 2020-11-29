@@ -131,7 +131,20 @@ The LED side of things is wired up to GPIO pins 25, 4, 5, and 18 in the same ord
 to the LED GND terminals on the breakout baord. GPIO 32 is used to power these in the `ledLoop()` function and is wired to the
 Blue LED terminal on the breakout board. The LED pins were chosen to also be compatible with the Sparkfun WROOM dev board as well.
 
+## Results
+
+I eventually wound up rebuilding this with the [SparkFun Thing Plus](https://www.sparkfun.com/products/15663) and designed a 3d printed case for it.
+The case design is in `case/Sonos Button Case.stl`. It's designed to fit the Thing Plus and SparkFun's 2000mah LIPO battery and has places for M2.5 nuts and hex standoffs to hold everything together.
+After using this for a while, I can report that it works pretty well. The battery life seems to be about three to four weeks and it is indeed useful when working on projects in the garage. 
+
+There are a few issues. Sometimes it fails to join the wifi, or takes a while to do so. Based on experiences with other projects, I think this might be remedied 
+by upgrading to the latest ESP IDF, but that will require re-writing it to use the standard IDF APIs rather than the arduino wrapper.  
+
 ## Pictures
+
+### Rebuild with case
+![](images/case-top.jpg)
+![](images/case-bottom.jpg)
 
 ### Full Project
 ![](images/all.jpg)
